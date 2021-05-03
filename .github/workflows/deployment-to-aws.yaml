@@ -11,10 +11,10 @@ on:
 permissions: read-all
 
 env:
-  EB_STAGING_S3_BUCKET_NAME    : "todo-list-app-sources-bucket"
+  STAGING_S3_BUCKET_NAME       : "todo-list-app-sources-bucket"
   EB_APPLICATION_NAME          : "todo-list-app-elastic-beanstalk"
   EB_ENVIRONMENT_NAME          : "Todolistappelasticbeanstalk-env"
-  EB_DEPLOY_JAR_NAME           : "application.jar"
+  EB_DEPLOY_JAR_NAME           : "final_executable_archive.jar"
   AWS_AVAILABILITY_ZONE_NAME   : "eu-north-1"
   
 jobs:
@@ -32,12 +32,32 @@ jobs:
         run: |
           java -version
           ./gradlew clean build --no-daemon
+          mv ./build/libs/*.jar ./build/libs/${{ env.EB_DEPLOY_JAR_NAME }}
       - name: Upload result jar to GitHub artifact
         uses: actions/upload-artifact@v2
         with: 
-          name: final_executable_archive.jar
-          path: ./build/libs/*.jar
+          name          : ${{ env.EB_DEPLOY_JAR_NAME }}
+          path          : ./build/libs/*.jar
           retention-days: 1
-  
-      
-      
+
+  deploy-to-s3-bucket:
+    needs: [build-source-code]
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Download .jar file as artifact from GitHub
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ env.EB_DEPLOY_JAR_NAME }}
+      - name: Authenticate with AWS account
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id     : ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key : ${{ secrets.AWS_SECRET_KEY }}
+          aws-region            : ${{ env.AWS_AVAILABILITY_ZONE_NAME }}
+
+      - name: Deployment .jar to S3
+        run : |
+          ls -la
+          aws s3 cp ./${{ env.EB_DEPLOY_JAR_NAME }} s3://${{ env.STAGING_S3_BUCKET_NAME }}/
+      - name: Print finish CI part message
+        run : echo "Deployment to S3 bucket ${{ env.STAGING_S3_BUCKET_NAME }} ended up successfully"
