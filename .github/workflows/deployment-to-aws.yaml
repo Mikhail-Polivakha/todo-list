@@ -1,0 +1,43 @@
+name: staging_build
+
+on: 
+  push:
+    branches: 
+      - master
+  pull_request:
+    branches:
+      - development
+
+permissions: read-all
+
+env:
+  EB_STAGING_S3_BUCKET_NAME    : "todo-list-app-sources-bucket"
+  EB_APPLICATION_NAME          : "todo-list-app-elastic-beanstalk"
+  EB_ENVIRONMENT_NAME          : "Todolistappelasticbeanstalk-env"
+  EB_DEPLOY_JAR_NAME           : "application.jar"
+  AWS_AVAILABILITY_ZONE_NAME   : "eu-north-1"
+  
+jobs:
+  build-source-code:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Copy source code from repository to Github cloud runner
+        uses: actions/checkout@v1
+      - name: Set proper java version for environment
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'adopt'
+      - name: Build java source code
+        run: |
+          java -version
+          ./gradlew clean build --no-daemon
+      - name: Upload result jar to GitHub artifact
+        uses: actions/upload-artifact@v2
+        with: 
+          name: final_executable_archive.jar
+          path: ./build/libs/*.jar
+          retention-days: 1
+  
+      
+      
