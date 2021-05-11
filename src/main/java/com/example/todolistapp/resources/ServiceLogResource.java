@@ -1,7 +1,7 @@
 package com.example.todolistapp.resources;
 
 import com.example.todolistapp.domain.ServiceLog;
-import com.example.todolistapp.service.ServiceLogKafkaAppenderService;
+import com.example.todolistapp.service.ServiceLogProcessingDelegator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/service-log")
 public class ServiceLogResource {
 
-    private final ServiceLogKafkaAppenderService serviceLogKafkaAppenderService;
+    private final ServiceLogProcessingDelegator serviceLogKafkaAppenderService;
 
     //TODO: Attach swagger here to describe REST API Endpoint
     @PostMapping
