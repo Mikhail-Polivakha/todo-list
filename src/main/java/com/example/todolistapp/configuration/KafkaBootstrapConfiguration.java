@@ -2,7 +2,9 @@ package com.example.todolistapp.configuration;
 
 import com.example.todolistapp.domain.LoggingLevel;
 import com.example.todolistapp.domain.ServiceLog;
+import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,31 +38,52 @@ public class KafkaBootstrapConfiguration {
         return resultString.substring(0, resultString.length() - 1);
     }
 
-    @Bean
-    public Map<String, Object> producerConfigurationSettings() {
-        Map<String, Object> properties = new HashMap<>();
+    private void attachGeneralProducerSettings(Map<String, Object> properties) {
         properties.put(ProducerConfig.CLIENT_ID_CONFIG, applicationName);
         properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, buildBootstrapServersString());
         properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, keySerializerClassName);
         properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, valueSerializerClassName);
-        /*
-         * TODO: replace properties below with configuration on a server to make log store for infinite time
-         *  properties.setProperty("log.retention.hours", "-1");
-         *  properties.setProperty("log.retention.bytes", "-1");
-         */
+    }
+
+    @Bean
+    public Map<String, Object> auditProducerConfigurationSettings() {
+        Map<String, Object> properties = new HashMap<>();
+        attachGeneralProducerSettings(properties);
+        properties.put(ProducerConfig.ACKS_CONFIG, 1);
         return properties;
     }
 
     @Bean
-    public ProducerFactory<LoggingLevel, ServiceLog> loggingTopicProducerFactory(Map<String, Object> producerConfigurationSettings) {
-        return new DefaultKafkaProducerFactory<>(producerConfigurationSettings);
+    public Map<String, Object> emergencyProducerConfigurationSettings() {
+        Map<String, Object> properties = new HashMap<>();
+        attachGeneralProducerSettings(properties);
+        properties.put(ProducerConfig.ACKS_CONFIG, "all");
+        return properties;
+    }
+
+    @Bean("auditTopicProducerFactory")
+    public ProducerFactory<LoggingLevel, ServiceLog> auditTopicProducerFactory(Map<String, Object> auditProducerConfigurationSettings) {
+        return new DefaultKafkaProducerFactory<>(auditProducerConfigurationSettings);
+    }
+
+    @Bean("emergencyTopicProducerFactory")
+    public ProducerFactory<LoggingLevel, ServiceLog> emergencyTopicProducerFactory(Map<String, Object> emergencyProducerConfigurationSettings) {
+        return new DefaultKafkaProducerFactory<>(emergencyProducerConfigurationSettings);
     }
 
     @Bean
-    public KafkaTemplate<LoggingLevel, ServiceLog> kafkaTemplate(ProducerFactory<LoggingLevel, ServiceLog> producerFactory) {
+    public KafkaTemplate<LoggingLevel, ServiceLog> auditKafkaTemplate(@Qualifier("auditTopicProducerFactory")
+                                                                              ProducerFactory<LoggingLevel, ServiceLog> producerFactory) {
         KafkaTemplate<LoggingLevel, ServiceLog> kafkaTemplate = new KafkaTemplate<>(producerFactory);
         kafkaTemplate.setMessageConverter(new StringJsonMessageConverter());
         return kafkaTemplate;
     }
 
+    @Bean
+    public KafkaTemplate<LoggingLevel, ServiceLog> emergencyKafkaTemplate(@Qualifier("emergencyTopicProducerFactory")
+                                                                                      ProducerFactory<LoggingLevel, ServiceLog> producerFactory) {
+        KafkaTemplate<LoggingLevel, ServiceLog> kafkaTemplate = new KafkaTemplate<>(producerFactory);
+        kafkaTemplate.setMessageConverter(new StringJsonMessageConverter());
+        return kafkaTemplate;
+    }
 }
