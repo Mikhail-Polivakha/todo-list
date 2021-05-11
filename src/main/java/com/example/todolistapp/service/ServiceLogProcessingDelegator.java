@@ -2,30 +2,35 @@ package com.example.todolistapp.service;
 
 import com.example.todolistapp.domain.LoggingLevel;
 import com.example.todolistapp.domain.ServiceLog;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.core.KafkaTemplate;
+import com.example.todolistapp.service.processors.LogProcessor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 @Service
-@RequiredArgsConstructor
 public class ServiceLogProcessingDelegator {
 
-    @Autowired
-    private KafkaTemplate<LoggingLevel, ServiceLog> kafkaTemplate;
+    private final Set<Entry<Set<LoggingLevel>, LogProcessor>> logProcessorsMap;
 
-    @Value("${}")
-    private String emergencyTopicName;
-
-    @Value("${}")
-    private String auditTopicName;
+    public ServiceLogProcessingDelegator(List<LogProcessor> logProcessorsList) {
+        this.logProcessorsMap = logProcessorsList.stream()
+                                                 .collect(Collectors.toMap(LogProcessor::getLoggingLevels, logProcessor -> logProcessor))
+                                                 .entrySet();
+    }
 
     /**
      * Send passed {@link ServiceLog} object to kafka topic
      * @param serviceLogToSend - serviceLog to send
      */
     public void send(ServiceLog serviceLogToSend) {
-
+        for (Entry<Set<LoggingLevel>, LogProcessor> entry : logProcessorsMap) {
+            if (entry.getKey().contains(serviceLogToSend.getLoggingLevel())) {
+                entry.getValue().handleMessage(serviceLogToSend);
+            }
+        }
     }
 }

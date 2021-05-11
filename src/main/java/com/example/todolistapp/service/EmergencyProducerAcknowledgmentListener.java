@@ -28,19 +28,19 @@ public class EmergencyProducerAcknowledgmentListener implements ProducerListener
     }
 
     private void logSuccess(ProducerRecord<LoggingLevel, ServiceLog> producerRecord, RecordMetadata recordMetadata) {
-        log.info("Emergency Log delivery success: ServiceLog {}, Partition : {}, Offset : {}",
+        log.info("Emergency Log publishment success: ServiceLog {}, Partition : {}, Offset : {}",
                  producerRecord.value(),
                  recordMetadata.partition(),
                  recordMetadata.offset());
     }
 
     private void logFailure(ProducerRecord<LoggingLevel, ServiceLog> producerRecord, Exception exception) {
-        log.warn("Emergency Log delivery failure: ServiceLog {}, Partition : {}, Key {}, Timestamp : {}, Exception : {}, Exception message : {}",
+        log.warn("Emergency Log publishment failure: ServiceLog {}, Partition : {}, Key {}, Timestamp : {}, Exception : {}, Exception message : {}",
                  producerRecord.value(),
                  producerRecord.partition(),
                  producerRecord.key(),
                  producerRecord.timestamp(),
-                 exception.getCause(),
+                 exception.getClass().getSimpleName(),
                  exception.getMessage()
         );
     }

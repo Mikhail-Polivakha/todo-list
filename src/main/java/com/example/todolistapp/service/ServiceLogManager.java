@@ -24,7 +24,7 @@ public class ServiceLogManager {
         mongoTemplate.save(unsuccessfulServiceLog);
     }
 
-    public UnsuccessfulServiceLog deleteUnsuccessfulServiceLog(ObjectId serviceLogId) {
+    public void deleteUnsuccessfulServiceLog(ObjectId serviceLogId) {
         mongoTemplate.remove(Query.query(Criteria.where(UnsuccessfulServiceLogField.ID).is(serviceLogId)), UnsuccessfulServiceLog.class);
     }
 }
