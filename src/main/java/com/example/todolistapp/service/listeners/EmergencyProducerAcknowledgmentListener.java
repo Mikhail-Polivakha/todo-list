@@ -1,7 +1,8 @@
-package com.example.todolistapp.service;
+package com.example.todolistapp.service.listeners;
 
 import com.example.todolistapp.domain.LoggingLevel;
 import com.example.todolistapp.domain.ServiceLog;
+import com.example.todolistapp.service.ServiceLogManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerRecord;
