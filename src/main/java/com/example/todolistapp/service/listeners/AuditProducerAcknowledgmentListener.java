@@ -1,4 +1,4 @@
-package com.example.todolistapp.service;
+package com.example.todolistapp.service.listeners;
 
 import com.example.todolistapp.domain.LoggingLevel;
 import com.example.todolistapp.domain.ServiceLog;
