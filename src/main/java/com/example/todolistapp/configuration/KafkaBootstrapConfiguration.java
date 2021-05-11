@@ -62,12 +62,14 @@ public class KafkaBootstrapConfiguration {
     }
 
     @Bean("auditTopicProducerFactory")
-    public ProducerFactory<LoggingLevel, ServiceLog> auditTopicProducerFactory(Map<String, Object> auditProducerConfigurationSettings) {
+    public ProducerFactory<LoggingLevel, ServiceLog> auditTopicProducerFactory(@Qualifier("auditProducerConfigurationSettings")
+                                                                                           Map<String, Object> auditProducerConfigurationSettings) {
         return new DefaultKafkaProducerFactory<>(auditProducerConfigurationSettings);
     }
 
     @Bean("emergencyTopicProducerFactory")
-    public ProducerFactory<LoggingLevel, ServiceLog> emergencyTopicProducerFactory(Map<String, Object> emergencyProducerConfigurationSettings) {
+    public ProducerFactory<LoggingLevel, ServiceLog> emergencyTopicProducerFactory(@Qualifier("emergencyProducerConfigurationSettings")
+                                                                                               Map<String, Object> emergencyProducerConfigurationSettings) {
         return new DefaultKafkaProducerFactory<>(emergencyProducerConfigurationSettings);
     }
 
