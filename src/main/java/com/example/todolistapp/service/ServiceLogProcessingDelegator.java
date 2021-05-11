@@ -1,8 +1,10 @@
 package com.example.todolistapp.service;
 
+import com.example.todolistapp.configuration.AsyncConfiguration;
 import com.example.todolistapp.domain.LoggingLevel;
 import com.example.todolistapp.domain.ServiceLog;
 import com.example.todolistapp.service.processors.LogProcessor;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -26,6 +28,7 @@ public class ServiceLogProcessingDelegator {
      * Send passed {@link ServiceLog} object to kafka topic
      * @param serviceLogToSend - serviceLog to send
      */
+    @Async(AsyncConfiguration.ASYNC_THREAD_POOL_EXECUTOR)
     public void send(ServiceLog serviceLogToSend) {
         for (Entry<Set<LoggingLevel>, LogProcessor> entry : logProcessorsMap) {
             if (entry.getKey().contains(serviceLogToSend.getLoggingLevel())) {
