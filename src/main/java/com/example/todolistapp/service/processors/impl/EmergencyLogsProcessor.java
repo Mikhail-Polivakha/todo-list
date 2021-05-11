@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.producer.ProducerInterceptor;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -15,10 +16,9 @@ import org.springframework.stereotype.Service;
 import java.util.Set;
 
 @Service
-@RequiredArgsConstructor
 public class EmergencyLogsProcessor implements LogProcessor {
 
-    @Qualifier("emergencyKafkaTemplate") private final KafkaTemplate<LoggingLevel, ServiceLog> kafkaTemplate;
+    @Autowired @Qualifier("emergencyKafkaTemplate") private KafkaTemplate<LoggingLevel, ServiceLog> kafkaTemplate;
 
     @Value("${kafka.topic.emergency.name}")
     private String emergencyKafkaTopicName;

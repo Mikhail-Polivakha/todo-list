@@ -5,6 +5,7 @@ import com.example.todolistapp.domain.ServiceLog;
 import com.example.todolistapp.service.processors.LogProcessor;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -13,10 +14,9 @@ import org.springframework.stereotype.Service;
 import java.util.Set;
 
 @Service
-@RequiredArgsConstructor
 public class AuditLogsProcessor implements LogProcessor {
 
-    @Qualifier("auditKafkaTemplate") private final KafkaTemplate<LoggingLevel, ServiceLog> kafkaTemplate;
+    @Autowired @Qualifier("auditKafkaTemplate") private KafkaTemplate<LoggingLevel, ServiceLog> kafkaTemplate;
 
     @Value("${kafka.topic.audit.name}")
     private String auditTopicName;
