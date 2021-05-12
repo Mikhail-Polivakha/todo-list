@@ -3,7 +3,6 @@ package com.example.todolistapp.service.processors.impl;
 import com.example.todolistapp.domain.LoggingLevel;
 import com.example.todolistapp.domain.ServiceLog;
 import com.example.todolistapp.service.processors.LogProcessor;
-import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -16,7 +15,7 @@ import java.util.Set;
 @Service
 public class AuditLogsProcessor implements LogProcessor {
 
-    @Autowired @Qualifier("auditKafkaTemplate") private KafkaTemplate<LoggingLevel, ServiceLog> kafkaTemplate;
+    @Autowired @Qualifier("auditKafkaTemplate") private KafkaTemplate<LoggingLevel, ServiceLog> auditKafkaTemplate;
 
     @Value("${kafka.topic.audit.name}")
     private String auditTopicName;
@@ -36,6 +35,6 @@ public class AuditLogsProcessor implements LogProcessor {
                 serviceLog,
                 null
         );
-        kafkaTemplate.send(auditLogProducerRecord);
+        auditKafkaTemplate.send(auditLogProducerRecord);
     }
 }
