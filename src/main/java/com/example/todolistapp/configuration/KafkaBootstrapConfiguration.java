@@ -2,13 +2,19 @@ package com.example.todolistapp.configuration;
 
 import com.example.todolistapp.domain.LoggingLevel;
 import com.example.todolistapp.domain.ServiceLog;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.admin.KafkaAdminClient;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.internals.Topic;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
+import org.springframework.kafka.core.KafkaAdmin;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.support.converter.StringJsonMessageConverter;
@@ -19,6 +25,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Configuration
+@Slf4j
 public class KafkaBootstrapConfiguration {
 
     @Value("${kafka.bootstrap.servers.url}")
@@ -32,6 +39,24 @@ public class KafkaBootstrapConfiguration {
 
     @Value("${kafka.value.serializer}")
     private String valueSerializerClassName;
+
+    @Value("${kafka.topic.emergency.name}")
+    private String emergencyTopicName;
+
+    @Value("${kafka.topic.audit.name}")
+    private String auditTopicName;
+
+    @Value("${kafka.topic.emergency.partitions.num}")
+    private int emergencyPartitionsAmount;
+
+    @Value("${kafka.topic.audit.partitions.num}")
+    private int auditPartitionsAmount;
+
+    @Value("${kafka.topic.emergency.replication-factor}")
+    private int emergencyReplicationFactor;
+
+    @Value("${kafka.topic.audit.replication-factor}")
+    private int auditReplicationFactor;
 
     private String buildBootstrapServersString() {
         final String resultString = this.bootstrapServersAddresses.stream().map(s -> s + ",").collect(Collectors.joining());
@@ -64,12 +89,14 @@ public class KafkaBootstrapConfiguration {
     @Bean("auditTopicProducerFactory")
     public ProducerFactory<LoggingLevel, ServiceLog> auditTopicProducerFactory(@Qualifier("auditProducerConfigurationSettings")
                                                                                            Map<String, Object> auditProducerConfigurationSettings) {
+        log.info("audit producer properties: {}", auditProducerConfigurationSettings);
         return new DefaultKafkaProducerFactory<>(auditProducerConfigurationSettings);
     }
 
     @Bean("emergencyTopicProducerFactory")
     public ProducerFactory<LoggingLevel, ServiceLog> emergencyTopicProducerFactory(@Qualifier("emergencyProducerConfigurationSettings")
                                                                                                Map<String, Object> emergencyProducerConfigurationSettings) {
+        log.info("emergency producer properties: {}", emergencyProducerConfigurationSettings);
         return new DefaultKafkaProducerFactory<>(emergencyProducerConfigurationSettings);
     }
 
@@ -78,6 +105,7 @@ public class KafkaBootstrapConfiguration {
                                                                               ProducerFactory<LoggingLevel, ServiceLog> producerFactory) {
         KafkaTemplate<LoggingLevel, ServiceLog> kafkaTemplate = new KafkaTemplate<>(producerFactory);
         kafkaTemplate.setMessageConverter(new StringJsonMessageConverter());
+        log.info("Audit kafka template config: {}", kafkaTemplate.getProducerFactory().getConfigurationProperties());
         return kafkaTemplate;
     }
 
@@ -86,6 +114,23 @@ public class KafkaBootstrapConfiguration {
                                                                                       ProducerFactory<LoggingLevel, ServiceLog> producerFactory) {
         KafkaTemplate<LoggingLevel, ServiceLog> kafkaTemplate = new KafkaTemplate<>(producerFactory);
         kafkaTemplate.setMessageConverter(new StringJsonMessageConverter());
+        log.info("Emergency kafka template config: {}", kafkaTemplate.getProducerFactory().getConfigurationProperties());
         return kafkaTemplate;
+    }
+
+    @Bean
+    public NewTopic emergencyTopic() {
+        return TopicBuilder.name(emergencyTopicName)
+                           .partitions(emergencyPartitionsAmount)
+                           .replicas(emergencyReplicationFactor)
+                           .build();
+    }
+
+    @Bean
+    public NewTopic auditTopic() {
+        return TopicBuilder.name(auditTopicName)
+                           .partitions(auditPartitionsAmount)
+                           .replicas(auditReplicationFactor)
+                           .build();
     }
 }
