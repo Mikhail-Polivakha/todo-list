@@ -1,56 +1,34 @@
-name: staging_build
+name: development_env_build
 
-on: 
-  push:
-    branches: 
-      - master
-  pull_request:
+on:
+  merge:
     branches:
       - development
 
 permissions: read-all
 
 env:
-<<<<<<< HEAD
-  STAGING_S3_BUCKET_NAME       : "todo-list-app-sources-bucket"
-  EB_APPLICATION_NAME          : "todo-list-app-elastic-beanstalk"
-  EB_ENVIRONMENT_NAME          : "Todolistappelasticbeanstalk-env"
-  EB_DEPLOY_JAR_NAME           : "final_executable_archive.jar"
-=======
   EB_STAGING_S3_BUCKET_NAME    : "todo-list-app-sources-bucket"
   EB_APPLICATION_NAME          : "todo-list-app-elastic-beanstalk"
   EB_ENVIRONMENT_NAME          : "Todolistappelasticbeanstalk-env"
   EB_DEPLOY_JAR_NAME           : "application.jar"
->>>>>>> fe1b1c5 (add gitfow yaml file and also some additional logs during gradle build)
   AWS_AVAILABILITY_ZONE_NAME   : "eu-north-1"
   
 jobs:
   build-source-code:
     runs-on: ubuntu-18.04
     steps:
-<<<<<<< HEAD
-
       - name: Copy source code from repository to Github cloud runner
         uses: actions/checkout@v1
-
-=======
-      - name: Copy source code from repository to Github cloud runner
-        uses: actions/checkout@v1
->>>>>>> fe1b1c5 (add gitfow yaml file and also some additional logs during gradle build)
       - name: Set proper java version for environment
         uses: actions/setup-java@v2
         with:
           java-version: '11'
           distribution: 'adopt'
-<<<<<<< HEAD
-
-=======
->>>>>>> fe1b1c5 (add gitfow yaml file and also some additional logs during gradle build)
       - name: Build java source code
         run: |
           java -version
-          ./gradlew clean build --no-daemon
-<<<<<<< HEAD
+          ./gradlew clean build -Dspring.profiles.active=development --no-daemon
           mv ./build/libs/*.jar ./build/libs/${{ env.EB_DEPLOY_JAR_NAME }}
 
       - name: Upload result jar to GitHub artifact
@@ -113,14 +91,9 @@ jobs:
 
       - name: Print finish CD part message
         run: echo "Update of AWS Elastic Beanstalk Application '${{ env.EB_APPLICATION_NAME }}' ended up successfully"
-=======
       - name: Upload result jar to GitHub artifact
         uses: actions/upload-artifact@v2
         with: 
           name: final_executable_archive.jar
           path: ./build/libs/*.jar
           retention-days: 1
-  
-      
-      
->>>>>>> fe1b1c5 (add gitfow yaml file and also some additional logs during gradle build)
