@@ -1,0 +1,44 @@
+package com.example.todolistapp.service.listeners;
+
+import com.example.todolistapp.domain.LoggingLevel;
+import com.example.todolistapp.domain.ServiceLog;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
+import org.springframework.kafka.support.ProducerListener;
+import org.springframework.stereotype.Service;
+
+@Service
+@Slf4j
+@RequiredArgsConstructor
+public class EmergencyProducerAcknowledgmentListener implements ProducerListener<LoggingLevel, ServiceLog> {
+
+    @Override
+    public void onSuccess(ProducerRecord<LoggingLevel, ServiceLog> producerRecord, RecordMetadata recordMetadata) {
+        logSuccess(producerRecord, recordMetadata);
+    }
+
+    @Override
+    public void onError(ProducerRecord<LoggingLevel, ServiceLog> producerRecord, RecordMetadata recordMetadata, Exception exception) {
+        logFailure(producerRecord, exception);
+    }
+
+    private void logSuccess(ProducerRecord<LoggingLevel, ServiceLog> producerRecord, RecordMetadata recordMetadata) {
+        log.info("Emergency Log publishment success: ServiceLog {}, Partition : {}, Offset : {}",
+                 producerRecord.value(),
+                 recordMetadata.partition(),
+                 recordMetadata.offset());
+    }
+
+    private void logFailure(ProducerRecord<LoggingLevel, ServiceLog> producerRecord, Exception exception) {
+        log.warn("Emergency Log publishment failure: ServiceLog {}, Partition : {}, Key {}, Timestamp : {}, Exception : {}, Exception message : {}",
+                 producerRecord.value(),
+                 producerRecord.partition(),
+                 producerRecord.key(),
+                 producerRecord.timestamp(),
+                 exception.getClass().getSimpleName(),
+                 exception.getMessage()
+        );
+    }
+}
