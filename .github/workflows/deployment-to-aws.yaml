@@ -1,7 +1,7 @@
 name: development_env_build
 
 on:
-  merge:
+  pull_request:
     branches:
       - development
 
