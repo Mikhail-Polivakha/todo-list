@@ -2,23 +2,24 @@ package com.example.todolistapp.configuration;
 
 import com.example.todolistapp.domain.LoggingLevel;
 import com.example.todolistapp.domain.ServiceLog;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.admin.KafkaAdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
-import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.internals.Topic;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
-import org.springframework.kafka.core.KafkaAdmin;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.support.converter.StringJsonMessageConverter;
 
+import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,47 +29,35 @@ import java.util.stream.Collectors;
 @Slf4j
 public class KafkaBootstrapConfiguration {
 
-    @Value("${kafka.bootstrap.servers.url}")
-    private List<String> bootstrapServersAddresses;
-
     @Value("${spring.application.name}")
     private String applicationName;
 
+    @Value("${kafka.bootstrap.servers.url}")
+    private List<String> bootstrapServersUrl;
+
     @Value("${kafka.key.serializer}")
-    private String keySerializerClassName;
+    private String keySerializer;
 
     @Value("${kafka.value.serializer}")
-    private String valueSerializerClassName;
+    private String valueSerializer;
 
     @Value("${kafka.topic.emergency.name}")
-    private String emergencyTopicName;
+    private String topicEmergencyName;
 
     @Value("${kafka.topic.audit.name}")
-    private String auditTopicName;
+    private String topicAuditName;
 
     @Value("${kafka.topic.emergency.partitions.num}")
-    private int emergencyPartitionsAmount;
+    private int topicEmergencyPartitionsNum;
 
     @Value("${kafka.topic.audit.partitions.num}")
-    private int auditPartitionsAmount;
+    private int topicAuditPartitionsNum;
 
     @Value("${kafka.topic.emergency.replication-factor}")
-    private int emergencyReplicationFactor;
+    private int topicEmergencyReplicationFactor;
 
     @Value("${kafka.topic.audit.replication-factor}")
-    private int auditReplicationFactor;
-
-    private String buildBootstrapServersString() {
-        final String resultString = this.bootstrapServersAddresses.stream().map(s -> s + ",").collect(Collectors.joining());
-        return resultString.substring(0, resultString.length() - 1);
-    }
-
-    private void attachGeneralProducerSettings(Map<String, Object> properties) {
-        properties.put(ProducerConfig.CLIENT_ID_CONFIG, applicationName);
-        properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, buildBootstrapServersString());
-        properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, keySerializerClassName);
-        properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, valueSerializerClassName);
-    }
+    private int topicAuditReplicationFactor;
 
     @Bean
     public Map<String, Object> auditProducerConfigurationSettings() {
@@ -120,17 +109,29 @@ public class KafkaBootstrapConfiguration {
 
     @Bean
     public NewTopic emergencyTopic() {
-        return TopicBuilder.name(emergencyTopicName)
-                           .partitions(emergencyPartitionsAmount)
-                           .replicas(emergencyReplicationFactor)
+        return TopicBuilder.name(topicEmergencyName)
+                           .partitions(topicEmergencyPartitionsNum)
+                           .replicas(topicEmergencyReplicationFactor)
                            .build();
     }
 
     @Bean
     public NewTopic auditTopic() {
-        return TopicBuilder.name(auditTopicName)
-                           .partitions(auditPartitionsAmount)
-                           .replicas(auditReplicationFactor)
+        return TopicBuilder.name(topicAuditName)
+                           .partitions(topicAuditPartitionsNum)
+                           .replicas(topicAuditReplicationFactor)
                            .build();
+    }
+
+    private String buildBootstrapServersString() {
+        final String resultString = this.bootstrapServersUrl.stream().map(s -> s + ",").collect(Collectors.joining());
+        return resultString.substring(0, resultString.length() - 1);
+    }
+
+    private void attachGeneralProducerSettings(Map<String, Object> properties) {
+        properties.put(ProducerConfig.CLIENT_ID_CONFIG, applicationName);
+        properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, buildBootstrapServersString());
+        properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, keySerializer);
+        properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, valueSerializer);
     }
 }

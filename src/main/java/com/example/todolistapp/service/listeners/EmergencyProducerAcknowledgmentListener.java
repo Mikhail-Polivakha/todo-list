@@ -2,7 +2,6 @@ package com.example.todolistapp.service.listeners;
 
 import com.example.todolistapp.domain.LoggingLevel;
 import com.example.todolistapp.domain.ServiceLog;
-import com.example.todolistapp.service.ServiceLogManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -15,8 +14,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class EmergencyProducerAcknowledgmentListener implements ProducerListener<LoggingLevel, ServiceLog> {
 
-    private final ServiceLogManager serviceLogManager;
-
     @Override
     public void onSuccess(ProducerRecord<LoggingLevel, ServiceLog> producerRecord, RecordMetadata recordMetadata) {
         logSuccess(producerRecord, recordMetadata);
@@ -25,7 +22,6 @@ public class EmergencyProducerAcknowledgmentListener implements ProducerListener
     @Override
     public void onError(ProducerRecord<LoggingLevel, ServiceLog> producerRecord, RecordMetadata recordMetadata, Exception exception) {
         logFailure(producerRecord, exception);
-        serviceLogManager.saveUnsuccessfulServiceLog(producerRecord.value(), exception.getMessage());
     }
 
     private void logSuccess(ProducerRecord<LoggingLevel, ServiceLog> producerRecord, RecordMetadata recordMetadata) {
